@@ -25,14 +25,12 @@ export class AuthService {
 
   private async initializeAuth(): Promise<void> {
     try {
-      // Get initial session
       const { data: { session } } = await this.supabase.auth.getSession();
 
       if (session?.user) {
         await this.setCurrentUser(session.user);
       }
 
-      // Listen for auth changes
       this.supabase.auth.onAuthStateChange(async (event, session) => {
         if (event === 'SIGNED_IN' && session?.user) {
           await this.setCurrentUser(session.user);
@@ -47,14 +45,13 @@ export class AuthService {
 
   private async setCurrentUser(user: User): Promise<void> {
     try {
-      // Get user profile from profiles table
       const { data: profile, error } = await this.supabase
         .from('profiles')
         .select('*')
         .eq('id', user.id)
         .single();
 
-      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows returned
+      if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user profile:', error);
       }
 
@@ -68,7 +65,6 @@ export class AuthService {
       this.currentUserSubject.next(userProfile);
     } catch (error) {
       console.error('Error setting current user:', error);
-      // Fallback to basic user info
       const userProfile: UserProfile = {
         id: user.id,
         email: user.email || ''
@@ -94,9 +90,7 @@ export class AuthService {
         throw error;
       }
 
-      // If user is created and confirmed, create profile
       if (data.user && !data.user.email_confirmed_at) {
-        // Email confirmation required
         return;
       }
 
@@ -142,12 +136,9 @@ export class AuthService {
       }
 
       if (data.user) {
-        // Handle remember me functionality
         if (rememberMe) {
-          // Set session to persist across browser sessions
           localStorage.setItem('supabase.auth.persist', 'true');
         } else {
-          // Remove persistence setting
           localStorage.removeItem('supabase.auth.persist');
         }
 
@@ -167,7 +158,6 @@ export class AuthService {
         throw error;
       }
 
-      // Clear any remember me settings
       localStorage.removeItem('supabase.auth.persist');
 
       this.currentUserSubject.next(null);
@@ -205,7 +195,6 @@ export class AuthService {
         throw error;
       }
 
-      // Update local user state
       const updatedUser: UserProfile = {
         ...currentUser,
         ...updates
