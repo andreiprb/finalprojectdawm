@@ -1,12 +1,21 @@
-import { Component } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { AuthService } from './services/auth.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrl: './app.component.css'
+  styleUrls: ['./app.component.scss'],
+  standalone: false
 })
-export class AppComponent {
-  title = 'finalprojectdawm';
+export class AppComponent implements OnInit {
+  title = 'DAWM Final Project';
+  isLoading = true;
+
+  constructor(private authService: AuthService) {}
+
+  ngOnInit(): void {
+    setTimeout(() => {
+      this.isLoading = false;
+    }, 1000);
+  }
 }
