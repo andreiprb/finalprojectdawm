@@ -46,7 +46,10 @@ import {
   GithubOutline,
   LinkOutline,
   InboxOutline,
-  GlobalOutline
+  GlobalOutline,
+  SearchOutline,
+  UpOutline,
+  SwapOutline
 } from '@ant-design/icons-angular/icons';
 
 registerLocaleData(en);
@@ -64,7 +67,10 @@ const icons: IconDefinition[] = [
   GithubOutline,
   LinkOutline,
   InboxOutline,
-  GlobalOutline
+  GlobalOutline,
+  SearchOutline,
+  UpOutline,
+  SwapOutline
 ];
 
 @NgModule({

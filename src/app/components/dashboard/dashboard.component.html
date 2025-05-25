@@ -35,31 +35,100 @@
       </button>
     </div>
 
+    <div class="table-controls">
+      <div class="search-container">
+        <nz-input-group nzSuffix>
+          <input
+            nz-input
+            placeholder="Search entries..."
+            [formControl]="searchControl"
+            class="search-input" />
+          <ng-template #suffix>
+            <span nz-icon nzType="search"></span>
+          </ng-template>
+        </nz-input-group>
+      </div>
+
+      <div class="results-info">
+        @if (searchTerm()) {
+          <span class="search-results">
+            Showing {{ filteredEntries().length }} of {{ entries().length }} entries
+          </span>
+        } @else {
+          <span class="total-results">
+            {{ entries().length }} entries total
+          </span>
+        }
+      </div>
+    </div>
+
     <nz-table
       #basicTable
-      [nzData]="entries"
-      [nzLoading]="isLoading"
+      [nzData]="sortedEntries()"
+      [nzLoading]="isLoading()"
       nzSize="middle"
       [nzScroll]="{ x: '800px' }"
       [nzShowPagination]="false"
       [nzNoResult]="customNoResult">
       <thead>
       <tr>
-        <th nzWidth="200px">Name</th>
-        <th nzWidth="300px">Description</th>
-        <th nzWidth="120px">Date</th>
+        <th
+          nzWidth="200px"
+          class="sortable-header"
+          (click)="sort('name')">
+          Name
+          <span class="sort-indicator">
+              @if (sortConfig().field === 'name') {
+                <span nz-icon [nzType]="sortConfig().direction === 'asc' ? 'up' : 'down'"></span>
+              } @else {
+                <span nz-icon nzType="swap" class="inactive-sort"></span>
+              }
+            </span>
+        </th>
+
+        <th
+          nzWidth="300px"
+          class="sortable-header"
+          (click)="sort('description')">
+          Description
+          <span class="sort-indicator">
+              @if (sortConfig().field === 'description') {
+                <span nz-icon [nzType]="sortConfig().direction === 'asc' ? 'up' : 'down'"></span>
+              } @else {
+                <span nz-icon nzType="swap" class="inactive-sort"></span>
+              }
+            </span>
+        </th>
+
+        <th
+          nzWidth="120px"
+          class="sortable-header"
+          (click)="sort('date')">
+          Date
+          <span class="sort-indicator">
+              @if (sortConfig().field === 'date') {
+                <span nz-icon [nzType]="sortConfig().direction === 'asc' ? 'up' : 'down'"></span>
+              } @else {
+                <span nz-icon nzType="swap" class="inactive-sort"></span>
+              }
+            </span>
+        </th>
+
         <th nzWidth="110px">Repository</th>
         <th nzWidth="70px">Visit</th>
         <th nzWidth="70px">Actions</th>
       </tr>
       </thead>
+
       <tbody>
-        @for (entry of basicTable.data; track entry?.id) {
+        @for (entry of sortedEntries(); track entry?.id) {
           <tr>
-            <td>{{ entry.name }}</td>
+            <td>
+              <span [innerHTML]="highlightText(entry.name, searchTerm())"></span>
+            </td>
             <td>
               <div class="description-cell">
-                {{ entry.description }}
+                <span [innerHTML]="highlightText(entry.description, searchTerm())"></span>
               </div>
             </td>
             <td>{{ entry.date | date:'MMM dd, yyyy' }}</td>
@@ -100,6 +169,21 @@
               </button>
             </td>
           </tr>
+        } @empty {
+          <tr>
+            <td colspan="6" class="empty-row">
+              @if (searchTerm()) {
+                <div class="custom-empty-state">
+                  <span nz-icon nzType="search" class="empty-icon"></span>
+                  <h3>No results found</h3>
+                  <p>Try adjusting your search terms</p>
+                  <button nz-button nzType="default" (click)="searchControl.setValue('')">
+                    Clear Search
+                  </button>
+                </div>
+              }
+            </td>
+          </tr>
         }
       </tbody>
     </nz-table>
@@ -123,7 +207,7 @@
   [nzTitle]="modalTitle"
   [nzOkText]="isEditMode ? 'Update' : 'Create'"
   [nzCancelText]="'Cancel'"
-  [nzOkLoading]="isLoading"
+  [nzOkLoading]="isLoading()"
   [nzOkDisabled]="entryForm.invalid"
   (nzOnCancel)="handleCancel()"
   (nzOnOk)="handleOk()"

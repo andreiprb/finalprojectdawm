@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Subject, takeUntil } from 'rxjs';
+import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
+import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -21,6 +21,11 @@ import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { DataService, TableEntry } from '../../services/data.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { Router } from '@angular/router';
+
+export interface SortConfig {
+  field: keyof TableEntry | null;
+  direction: 'asc' | 'desc' | null;
+}
 
 @Component({
   selector: 'app-dashboard',
@@ -48,8 +53,11 @@ import { Router } from '@angular/router';
 export class DashboardComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
 
-  entries: TableEntry[] = [];
-  isLoading = false;
+  entries = signal<TableEntry[]>([]);
+  isLoading = signal<boolean>(false);
+  searchTerm = signal<string>('');
+  sortConfig = signal<SortConfig>({ field: 'date', direction: 'desc' });
+
   currentUser: UserProfile | null = null;
 
   isModalVisible = false;
@@ -58,6 +66,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
   modalTitle = 'Add New Entry';
 
   entryForm!: FormGroup;
+  searchControl = new FormControl('');
+
+  filteredEntries = computed(() => {
+    const entries = this.entries();
+    const term = this.searchTerm().toLowerCase().trim();
+
+    if (!term) return entries;
+
+    return entries.filter(entry =>
+      entry.name.toLowerCase().includes(term) ||
+      entry.description.toLowerCase().includes(term) ||
+      entry.date.toDateString().toLowerCase().includes(term)
+    );
+  });
+
+  sortedEntries = computed(() => {
+    const entries = this.filteredEntries();
+    const config = this.sortConfig();
+
+    if (!config.field || !config.direction) return entries;
+
+    return [...entries].sort((a, b) => {
+      const aValue = this.getSortValue(a, config.field!);
+      const bValue = this.getSortValue(b, config.field!);
+
+      let result = 0;
+      if (aValue < bValue) result = -1;
+      else if (aValue > bValue) result = 1;
+
+      return config.direction === 'desc' ? -result : result;
+    });
+  });
 
   constructor(
     private dataService: DataService,
@@ -69,6 +109,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.initializeForm();
+    this.setupSearch();
     this.loadCurrentUser();
     this.subscribeToEntries();
     this.loadEntries();
@@ -90,6 +131,18 @@ export class DashboardComponent implements OnInit, OnDestroy {
     });
   }
 
+  private setupSearch(): void {
+    this.searchControl.valueChanges
+      .pipe(
+        debounceTime(300),
+        distinctUntilChanged(),
+        takeUntil(this.destroy$)
+      )
+      .subscribe(value => {
+        this.searchTerm.set(value || '');
+      });
+  }
+
   private urlValidator(control: any) {
     if (!control.value) return null;
     const urlPattern = /^https?:\/\/.+/;
@@ -108,19 +161,54 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.dataService.entries$
       .pipe(takeUntil(this.destroy$))
       .subscribe(entries => {
-        this.entries = entries;
+        this.entries.set(entries);
       });
   }
 
   async loadEntries(): Promise<void> {
-    this.isLoading = true;
+    this.isLoading.set(true);
     try {
       await this.dataService.loadEntries();
     } catch (error: any) {
       this.message.error(error.message || 'Failed to load entries');
     } finally {
-      this.isLoading = false;
+      this.isLoading.set(false);
     }
+  }
+
+  sort(field: keyof TableEntry): void {
+    const currentConfig = this.sortConfig();
+    let newDirection: 'asc' | 'desc' = 'asc';
+
+    if (currentConfig.field === field) {
+      if (currentConfig.direction === 'asc') {
+        newDirection = 'desc';
+      } else if (currentConfig.direction === 'desc') {
+        this.sortConfig.set({ field: null, direction: null });
+        return;
+      }
+    }
+
+    this.sortConfig.set({ field, direction: newDirection });
+  }
+
+  private getSortValue(entry: TableEntry, field: keyof TableEntry): any {
+    switch (field) {
+      case 'date':
+        return new Date(entry.date).getTime();
+      case 'name':
+      case 'description':
+        return entry[field].toLowerCase();
+      default:
+        return entry[field];
+    }
+  }
+
+  highlightText(text: string, searchTerm: string): string {
+    if (!searchTerm.trim()) return text;
+
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    return text.replace(regex, '<span class="highlight">$1</span>');
   }
 
   openModal(): void {
@@ -153,7 +241,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   async handleOk(): Promise<void> {
     if (this.entryForm.valid) {
-      this.isLoading = true;
+      this.isLoading.set(true);
       try {
         const formValue = this.entryForm.value;
 
@@ -170,7 +258,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
       } catch (error: any) {
         this.message.error(error.message || 'Operation failed');
       } finally {
-        this.isLoading = false;
+        this.isLoading.set(false);
       }
     } else {
       this.markFormGroupTouched();
