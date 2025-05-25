@@ -36,15 +36,15 @@
             "production": {
               "fileReplacements": [
                 {
-                  "replace": "src/enviorments/enviorments.ts",
-                  "with": "src/enviorments/enviorments.prod.ts"
+                  "replace": "src/environments/environment.ts",
+                  "with": "src/environments/environment.prod.ts"
                 }
               ],
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "2MB",
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
@@ -96,6 +96,9 @@
             ],
             "scripts": []
           }
+        },
+        "deploy": {
+          "builder": "angular-cli-ghpages:deploy"
         }
       }
     }
