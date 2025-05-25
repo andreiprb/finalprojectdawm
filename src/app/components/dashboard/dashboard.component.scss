@@ -63,9 +63,11 @@
 // Table specific styles
 .description-cell {
   max-width: 300px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: normal;
+  word-wrap: break-word;
+  word-break: break-word;
+  line-height: 1.4;
+  padding: 4px 0;
 }
 
 .custom-empty-state {
@@ -87,4 +89,25 @@
     margin-bottom: 24px;
     color: #8c8c8c;
   }
+}
+
+// Global table styling for multi-line support
+::ng-deep .ant-table-tbody > tr > td {
+  vertical-align: top;
+  padding: 12px 16px;
+}
+
+::ng-deep .ant-table-thead > tr > th {
+  background-color: #fafafa;
+  font-weight: 600;
+}
+
+// Ensure proper table layout
+::ng-deep .ant-table {
+  table-layout: fixed;
+}
+
+::ng-deep .ant-table-thead > tr > th,
+::ng-deep .ant-table-tbody > tr > td {
+  word-wrap: break-word;
 }

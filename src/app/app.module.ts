@@ -46,7 +46,8 @@ import {
   DeleteOutline,
   GithubOutline,
   LinkOutline,
-  InboxOutline
+  InboxOutline,
+  GlobalOutline
 } from '@ant-design/icons-angular/icons';
 
 import { DashboardComponent } from './components/dashboard/dashboard.component';
@@ -66,7 +67,8 @@ const icons: IconDefinition[] = [
   DeleteOutline,
   GithubOutline,
   LinkOutline,
-  InboxOutline
+  InboxOutline,
+  GlobalOutline
 ];
 
 @NgModule({

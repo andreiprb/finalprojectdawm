@@ -13,7 +13,13 @@ export class DatabaseService {
     if (!DatabaseService.supabaseClient) {
       DatabaseService.supabaseClient = createClient(
         environment.supabaseUrl,
-        environment.supabaseAnonKey
+        environment.supabaseAnonKey,
+        {
+          auth: {
+            persistSession: false, // <--- dezactivează mecanismul cu lock
+            autoRefreshToken: false
+          }
+        }
       );
     }
   }
