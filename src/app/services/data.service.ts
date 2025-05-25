@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { BehaviorSubject } from 'rxjs';
-import { environment } from '../enviorments/enviorments';
+import { DatabaseService } from './db.service';
 import { AuthService } from './auth.service';
 
 export interface TableEntry {
@@ -20,13 +19,13 @@ export interface TableEntry {
   providedIn: 'root'
 })
 export class DataService {
-  private supabase: SupabaseClient;
   private entriesSubject = new BehaviorSubject<TableEntry[]>([]);
   public entries$ = this.entriesSubject.asObservable();
 
-  constructor(private authService: AuthService) {
-    this.supabase = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
-  }
+  constructor(
+    private dbService: DatabaseService,
+    private authService: AuthService
+  ) {}
 
   async loadEntries(): Promise<void> {
     try {
@@ -35,7 +34,7 @@ export class DataService {
         throw new Error('No authenticated user');
       }
 
-      const { data, error } = await this.supabase
+      const { data, error } = await this.dbService
         .from('user_entries')
         .select('*')
         .eq('author', currentUser.id)
@@ -64,7 +63,7 @@ export class DataService {
         throw new Error('No authenticated user');
       }
 
-      const { data, error } = await this.supabase
+      const { data, error } = await this.dbService
         .from('user_entries')
         .insert({
           name: entry.name,
@@ -102,7 +101,7 @@ export class DataService {
         updateData.date = updates.date.toISOString();
       }
 
-      const { error } = await this.supabase
+      const { error } = await this.dbService
         .from('user_entries')
         .update(updateData)
         .eq('id', id);
@@ -121,7 +120,7 @@ export class DataService {
 
   async deleteEntry(id: string): Promise<void> {
     try {
-      const { error } = await this.supabase
+      const { error } = await this.dbService
         .from('user_entries')
         .delete()
         .eq('id', id);

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { createClient, SupabaseClient, User } from '@supabase/supabase-js';
+import { User } from '@supabase/supabase-js';
 import { BehaviorSubject } from 'rxjs';
-import { environment } from '../enviorments/enviorments';
+import { DatabaseService } from './db.service';
 
 export interface UserProfile {
   id: string;
@@ -13,22 +13,20 @@ export interface UserProfile {
   providedIn: 'root'
 })
 export class AuthService {
-  private supabase: SupabaseClient;
   private currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  constructor() {
-    this.supabase = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
+  constructor(private dbService: DatabaseService) {
     this.initializeAuth();
   }
 
   private async initializeAuth(): Promise<void> {
-    const { data: { session } } = await this.supabase.auth.getSession();
+    const { data: { session } } = await this.dbService.auth.getSession();
     if (session?.user) {
       await this.setCurrentUser(session.user);
     }
 
-    this.supabase.auth.onAuthStateChange(async (event, session) => {
+    this.dbService.auth.onAuthStateChange(async (event, session) => {
       if (event === 'SIGNED_IN' && session?.user) {
         await this.setCurrentUser(session.user);
       } else if (event === 'SIGNED_OUT') {
@@ -39,7 +37,7 @@ export class AuthService {
 
   private async setCurrentUser(user: User): Promise<void> {
     // Use getUser() to get the most up-to-date user data including metadata
-    const { data: { user: currentUser }, error } = await this.supabase.auth.getUser();
+    const { data: { user: currentUser }, error } = await this.dbService.auth.getUser();
 
     if (error || !currentUser) {
       console.error('Error fetching user:', error);
@@ -61,7 +59,7 @@ export class AuthService {
   }
 
   async signUp(email: string, password: string, firstName: string, lastName: string): Promise<void> {
-    const { error } = await this.supabase.auth.signUp({
+    const { error } = await this.dbService.auth.signUp({
       email,
       password,
       options: {
@@ -76,7 +74,7 @@ export class AuthService {
   }
 
   async signIn(email: string, password: string, rememberMe: boolean = false): Promise<void> {
-    const { error } = await this.supabase.auth.signInWithPassword({
+    const { error } = await this.dbService.auth.signInWithPassword({
       email,
       password
     });
@@ -91,7 +89,7 @@ export class AuthService {
   }
 
   async signOut(): Promise<void> {
-    const { error } = await this.supabase.auth.signOut();
+    const { error } = await this.dbService.auth.signOut();
     if (error) throw new Error(error.message);
   }
 
@@ -105,7 +103,7 @@ export class AuthService {
 
   // Debug method to check what's actually in the user metadata
   async debugUserMetadata(): Promise<void> {
-    const { data: { user }, error } = await this.supabase.auth.getUser();
+    const { data: { user }, error } = await this.dbService.auth.getUser();
     if (error) {
       console.error('Error fetching user for debug:', error);
       return;
