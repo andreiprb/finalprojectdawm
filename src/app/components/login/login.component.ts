@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -11,7 +11,7 @@ import { NzCheckboxModule } from 'ng-zorro-antd/checkbox';
 import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzMessageService } from 'ng-zorro-antd/message';
 
-import { AuthService } from '../../services/auth.service';
+import { AuthService, UserProfile } from '../../services/auth.service';
 import { CustomValidators } from '../../validators/custom-validators';
 
 @Component({
@@ -31,6 +31,13 @@ import { CustomValidators } from '../../validators/custom-validators';
   standalone: true
 })
 export class LoginComponent implements OnInit {
+  @Input() initialMode: 'login' | 'register' = 'login';
+  @Input() redirectUrl: string = '/dashboard';
+
+  @Output() loginSuccess = new EventEmitter<UserProfile>();
+  @Output() registerSuccess = new EventEmitter<void>();
+  @Output() modeChanged = new EventEmitter<'login' | 'register'>();
+
   loginForm!: FormGroup;
   registerForm!: FormGroup;
   isLoginMode = true;
@@ -44,6 +51,7 @@ export class LoginComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    this.isLoginMode = this.initialMode === 'login';
     this.initializeForms();
   }
 
@@ -71,6 +79,7 @@ export class LoginComponent implements OnInit {
   toggleMode(): void {
     this.isLoginMode = !this.isLoginMode;
     this.resetForms();
+    this.modeChanged.emit(this.isLoginMode ? 'login' : 'register');
   }
 
   resetForms(): void {
@@ -85,8 +94,14 @@ export class LoginComponent implements OnInit {
       try {
         const { email, password, rememberMe } = this.loginForm.value;
         await this.authService.signIn(email, password, rememberMe);
+
+        const currentUser = this.authService.getCurrentUser();
+        if (currentUser) {
+          this.loginSuccess.emit(currentUser);
+        }
+
         this.message.success('Login successful!');
-        this.router.navigate(['/dashboard']);
+        this.router.navigate([this.redirectUrl]);
       } catch (error: any) {
         this.message.error(error.message || 'Login failed');
       } finally {
@@ -103,6 +118,9 @@ export class LoginComponent implements OnInit {
       try {
         const { email, password, firstName, lastName } = this.registerForm.value;
         await this.authService.signUp(email, password, firstName, lastName);
+
+        this.registerSuccess.emit();
+
         this.message.success('Registration successful! Please check your email to verify your account.');
         this.isLoginMode = true;
         this.resetForms();
