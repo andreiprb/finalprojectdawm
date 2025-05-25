@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { CanActivate, Router } from '@angular/router';
-import { Observable, map } from 'rxjs';
+import { Observable, map, switchMap, timer } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 @Injectable({
@@ -14,7 +14,8 @@ export class AuthGuard implements CanActivate {
   ) {}
 
   canActivate(): Observable<boolean> {
-    return this.authService.currentUser$.pipe(
+    return this.waitForAuthInit().pipe(
+      switchMap(() => this.authService.currentUser$),
       map(user => {
         if (user) {
           return true;
@@ -23,6 +24,16 @@ export class AuthGuard implements CanActivate {
           return false;
         }
       })
+    );
+  }
+
+  private waitForAuthInit(): Observable<boolean> {
+    return timer(0, 100).pipe(
+      switchMap(async () => {
+        await this.authService.waitForInitialization();
+        return true;
+      }),
+      map(() => true)
     );
   }
 }
@@ -38,7 +49,8 @@ export class LoginGuard implements CanActivate {
   ) {}
 
   canActivate(): Observable<boolean> {
-    return this.authService.currentUser$.pipe(
+    return this.waitForAuthInit().pipe(
+      switchMap(() => this.authService.currentUser$),
       map(user => {
         if (!user) {
           return true;
@@ -47,6 +59,16 @@ export class LoginGuard implements CanActivate {
           return false;
         }
       })
+    );
+  }
+
+  private waitForAuthInit(): Observable<boolean> {
+    return timer(0, 100).pipe(
+      switchMap(async () => {
+        await this.authService.waitForInitialization();
+        return true;
+      }),
+      map(() => true)
     );
   }
 }

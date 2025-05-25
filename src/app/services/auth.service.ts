@@ -15,45 +15,63 @@ export interface UserProfile {
 export class AuthService {
   private currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
+  private initialized = false;
 
   constructor(private dbService: DatabaseService) {
     this.initializeAuth();
   }
 
   private async initializeAuth(): Promise<void> {
-    const { data: { session } } = await this.dbService.auth.getSession();
-    if (session?.user) {
-      await this.setCurrentUser(session.user);
-    }
+    try {
+      const { data: { session }, error: sessionError } = await this.dbService.auth.getSession();
 
-    this.dbService.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'SIGNED_IN' && session?.user) {
-        await this.setCurrentUser(session.user);
-      } else if (event === 'SIGNED_OUT') {
-        this.currentUserSubject.next(null);
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        this.initialized = true;
+        return;
       }
-    });
+
+      if (session?.user) {
+        await this.setCurrentUser(session.user);
+      }
+
+      this.dbService.auth.onAuthStateChange(async (event, session) => {
+        console.log('Auth state change:', event, session?.user?.email);
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          await this.setCurrentUser(session.user);
+        } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
+          if (event === 'SIGNED_OUT') {
+            this.currentUserSubject.next(null);
+          } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+            await this.setCurrentUser(session.user);
+          }
+        }
+      });
+
+      this.initialized = true;
+    } catch (error) {
+      console.error('Auth initialization error:', error);
+      this.initialized = true;
+    }
   }
 
   private async setCurrentUser(user: User): Promise<void> {
-    const { data: { user: currentUser }, error } = await this.dbService.auth.getUser();
+    try {
+      const firstName = user.user_metadata?.['first_name'] || '';
+      const lastName = user.user_metadata?.['last_name'] || '';
+      const displayName = `${firstName} ${lastName}`.trim() || user.email?.split('@')[0] || 'User';
 
-    if (error || !currentUser) {
-      console.error('Error fetching user:', error);
-      return;
+      const userProfile: UserProfile = {
+        id: user.id,
+        email: user.email!,
+        displayName: displayName
+      };
+
+      this.currentUserSubject.next(userProfile);
+    } catch (error) {
+      console.error('Error setting current user:', error);
     }
-
-    const firstName = currentUser.user_metadata?.['first_name'] || '';
-    const lastName = currentUser.user_metadata?.['last_name'] || '';
-    const displayName = `${firstName} ${lastName}`.trim() || 'User';
-
-    const userProfile: UserProfile = {
-      id: currentUser.id,
-      email: currentUser.email!,
-      displayName: displayName
-    };
-
-    this.currentUserSubject.next(userProfile);
   }
 
   async signUp(email: string, password: string, firstName: string, lastName: string): Promise<void> {
@@ -78,12 +96,6 @@ export class AuthService {
     });
 
     if (error) throw new Error(error.message);
-
-    if (rememberMe) {
-      localStorage.setItem('supabase.auth.persist', 'true');
-    } else {
-      localStorage.removeItem('supabase.auth.persist');
-    }
   }
 
   async signOut(): Promise<void> {
@@ -99,11 +111,31 @@ export class AuthService {
     return this.currentUserSubject.value !== null;
   }
 
+  async waitForInitialization(): Promise<void> {
+    if (this.initialized) return;
+
+    return new Promise((resolve) => {
+      const checkInitialized = () => {
+        if (this.initialized) {
+          resolve();
+        } else {
+          setTimeout(checkInitialized, 50);
+        }
+      };
+      checkInitialized();
+    });
+  }
+
   async debugUserMetadata(): Promise<void> {
-    const { data: { user }, error } = await this.dbService.auth.getUser();
-    if (error) {
-      console.error('Error fetching user for debug:', error);
-      return;
+    try {
+      const { data: { user }, error } = await this.dbService.auth.getUser();
+      if (error) {
+        console.error('Error fetching user for debug:', error);
+        return;
+      }
+      console.log('Current user metadata:', user?.user_metadata);
+    } catch (error) {
+      console.error('Debug error:', error);
     }
   }
 }

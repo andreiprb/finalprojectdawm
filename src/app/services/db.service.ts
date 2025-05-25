@@ -8,7 +8,16 @@ import { environment } from '../../environments/environment';
 export class DatabaseService {
   private static supabaseClient: SupabaseClient = createClient(
     environment.supabaseUrl,
-    environment.supabaseAnonKey
+    environment.supabaseAnonKey,
+    {
+      auth: {
+        persistSession: true,
+        storageKey: 'supabase.auth.token',
+        storage: window.localStorage,
+        autoRefreshToken: true,
+        detectSessionInUrl: true
+      }
+    }
   );
 
   constructor() {}
