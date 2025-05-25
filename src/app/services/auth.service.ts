@@ -6,8 +6,7 @@ import { environment } from '../enviorments/enviorments';
 export interface UserProfile {
   id: string;
   email: string;
-  firstName?: string;
-  lastName?: string;
+  displayName: string;
 }
 
 @Injectable({
@@ -24,147 +23,76 @@ export class AuthService {
   }
 
   private async initializeAuth(): Promise<void> {
-    try {
-      const { data: { session } } = await this.supabase.auth.getSession();
-
-      if (session?.user) {
-        await this.setCurrentUser(session.user);
-      }
-
-      this.supabase.auth.onAuthStateChange(async (event, session) => {
-        if (event === 'SIGNED_IN' && session?.user) {
-          await this.setCurrentUser(session.user);
-        } else if (event === 'SIGNED_OUT') {
-          this.currentUserSubject.next(null);
-        }
-      });
-    } catch (error) {
-      console.error('Error initializing auth:', error);
+    const { data: { session } } = await this.supabase.auth.getSession();
+    if (session?.user) {
+      await this.setCurrentUser(session.user);
     }
+
+    this.supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'SIGNED_IN' && session?.user) {
+        await this.setCurrentUser(session.user);
+      } else if (event === 'SIGNED_OUT') {
+        this.currentUserSubject.next(null);
+      }
+    });
   }
 
   private async setCurrentUser(user: User): Promise<void> {
-    try {
-      const { data: profile, error } = await this.supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
+    // Use getUser() to get the most up-to-date user data including metadata
+    const { data: { user: currentUser }, error } = await this.supabase.auth.getUser();
 
-      if (error && error.code !== 'PGRST116') {
-        console.error('Error fetching user profile:', error);
-      }
-
-      const userProfile: UserProfile = {
-        id: user.id,
-        email: user.email || '',
-        firstName: profile?.first_name || '',
-        lastName: profile?.last_name || ''
-      };
-
-      this.currentUserSubject.next(userProfile);
-    } catch (error) {
-      console.error('Error setting current user:', error);
-      const userProfile: UserProfile = {
-        id: user.id,
-        email: user.email || ''
-      };
-      this.currentUserSubject.next(userProfile);
+    if (error || !currentUser) {
+      console.error('Error fetching user:', error);
+      return;
     }
+
+    // Construct display name from first_name and last_name
+    const firstName = currentUser.user_metadata?.['first_name'] || '';
+    const lastName = currentUser.user_metadata?.['last_name'] || '';
+    const displayName = `${firstName} ${lastName}`.trim() || 'User';
+
+    const userProfile: UserProfile = {
+      id: currentUser.id,
+      email: currentUser.email!,
+      displayName: displayName
+    };
+
+    this.currentUserSubject.next(userProfile);
   }
 
   async signUp(email: string, password: string, firstName: string, lastName: string): Promise<void> {
-    try {
-      const { data, error } = await this.supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            first_name: firstName,
-            last_name: lastName
-          }
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.user && !data.user.email_confirmed_at) {
-        return;
-      }
-
-      if (data.user) {
-        await this.createUserProfile(data.user.id, email, firstName, lastName);
-      }
-    } catch (error: any) {
-      console.error('Sign up error:', error);
-      throw new Error(error.message || 'Failed to create account');
-    }
-  }
-
-  private async createUserProfile(userId: string, email: string, firstName: string, lastName: string): Promise<void> {
-    try {
-      const { error } = await this.supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email,
+    const { error } = await this.supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        data: {
           first_name: firstName,
-          last_name: lastName,
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) {
-        console.error('Error creating user profile:', error);
+          last_name: lastName
+        }
       }
-    } catch (error) {
-      console.error('Error creating user profile:', error);
-    }
+    });
+
+    if (error) throw new Error(error.message);
   }
 
   async signIn(email: string, password: string, rememberMe: boolean = false): Promise<void> {
-    try {
-      const { data, error } = await this.supabase.auth.signInWithPassword({
-        email,
-        password
-      });
+    const { error } = await this.supabase.auth.signInWithPassword({
+      email,
+      password
+    });
 
-      if (error) {
-        throw error;
-      }
+    if (error) throw new Error(error.message);
 
-      if (data.user) {
-        if (rememberMe) {
-          localStorage.setItem('supabase.auth.persist', 'true');
-        } else {
-          localStorage.removeItem('supabase.auth.persist');
-        }
-
-        await this.setCurrentUser(data.user);
-      }
-    } catch (error: any) {
-      console.error('Sign in error:', error);
-      throw new Error(error.message || 'Failed to sign in');
+    if (rememberMe) {
+      localStorage.setItem('supabase.auth.persist', 'true');
+    } else {
+      localStorage.removeItem('supabase.auth.persist');
     }
   }
 
   async signOut(): Promise<void> {
-    try {
-      const { error } = await this.supabase.auth.signOut();
-
-      if (error) {
-        throw error;
-      }
-
-      localStorage.removeItem('supabase.auth.persist');
-
-      this.currentUserSubject.next(null);
-    } catch (error: any) {
-      console.error('Sign out error:', error);
-      throw new Error(error.message || 'Failed to sign out');
-    }
+    const { error } = await this.supabase.auth.signOut();
+    if (error) throw new Error(error.message);
   }
 
   getCurrentUser(): UserProfile | null {
@@ -175,81 +103,12 @@ export class AuthService {
     return this.currentUserSubject.value !== null;
   }
 
-  async updateProfile(updates: Partial<UserProfile>): Promise<void> {
-    try {
-      const currentUser = this.getCurrentUser();
-      if (!currentUser) {
-        throw new Error('No authenticated user');
-      }
-
-      const { error } = await this.supabase
-        .from('profiles')
-        .update({
-          first_name: updates.firstName,
-          last_name: updates.lastName,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', currentUser.id);
-
-      if (error) {
-        throw error;
-      }
-
-      const updatedUser: UserProfile = {
-        ...currentUser,
-        ...updates
-      };
-      this.currentUserSubject.next(updatedUser);
-    } catch (error: any) {
-      console.error('Update profile error:', error);
-      throw new Error(error.message || 'Failed to update profile');
-    }
-  }
-
-  async resetPassword(email: string): Promise<void> {
-    try {
-      const { error } = await this.supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`
-      });
-
-      if (error) {
-        throw error;
-      }
-    } catch (error: any) {
-      console.error('Reset password error:', error);
-      throw new Error(error.message || 'Failed to send reset email');
-    }
-  }
-
-  async updatePassword(newPassword: string): Promise<void> {
-    try {
-      const { error } = await this.supabase.auth.updateUser({
-        password: newPassword
-      });
-
-      if (error) {
-        throw error;
-      }
-    } catch (error: any) {
-      console.error('Update password error:', error);
-      throw new Error(error.message || 'Failed to update password');
-    }
-  }
-
-  async refreshSession(): Promise<void> {
-    try {
-      const { data, error } = await this.supabase.auth.refreshSession();
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.user) {
-        await this.setCurrentUser(data.user);
-      }
-    } catch (error: any) {
-      console.error('Refresh session error:', error);
-      throw new Error(error.message || 'Failed to refresh session');
+  // Debug method to check what's actually in the user metadata
+  async debugUserMetadata(): Promise<void> {
+    const { data: { user }, error } = await this.supabase.auth.getUser();
+    if (error) {
+      console.error('Error fetching user for debug:', error);
+      return;
     }
   }
 }

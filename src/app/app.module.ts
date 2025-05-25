@@ -3,6 +3,9 @@ import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ReactiveFormsModule } from '@angular/forms';
 
+import { registerLocaleData } from '@angular/common';
+import en from '@angular/common/locales/en';
+
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzButtonModule } from 'ng-zorro-antd/button';
@@ -18,6 +21,14 @@ import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzStatisticModule } from 'ng-zorro-antd/statistic';
 import { NzListModule } from 'ng-zorro-antd/list';
 import { NzSpinModule } from 'ng-zorro-antd/spin';
+import { NzTableModule } from 'ng-zorro-antd/table';
+import { NzModalModule } from 'ng-zorro-antd/modal';
+import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
+import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
+
+// ng-zorro locale
+import { NZ_I18N, en_US } from 'ng-zorro-antd/i18n';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -29,10 +40,19 @@ import {
   MailOutline,
   LogoutOutline,
   SettingOutline,
-  DownOutline
+  DownOutline,
+  PlusOutline,
+  EditOutline,
+  DeleteOutline,
+  GithubOutline,
+  LinkOutline,
+  InboxOutline
 } from '@ant-design/icons-angular/icons';
 
 import { DashboardComponent } from './components/dashboard/dashboard.component';
+
+// Register locale data
+registerLocaleData(en);
 
 const icons: IconDefinition[] = [
   UserOutline,
@@ -40,7 +60,13 @@ const icons: IconDefinition[] = [
   MailOutline,
   LogoutOutline,
   SettingOutline,
-  DownOutline
+  DownOutline,
+  PlusOutline,
+  EditOutline,
+  DeleteOutline,
+  GithubOutline,
+  LinkOutline,
+  InboxOutline
 ];
 
 @NgModule({
@@ -67,9 +93,16 @@ const icons: IconDefinition[] = [
     NzIconModule.forRoot(icons),
     NzStatisticModule,
     NzListModule,
-    NzSpinModule
+    NzSpinModule,
+    NzTableModule,
+    NzModalModule,
+    NzDatePickerModule,
+    NzPopconfirmModule,
+    NzToolTipModule
   ],
-  providers: [],
+  providers: [
+    { provide: NZ_I18N, useValue: en_US }
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
