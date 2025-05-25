@@ -1,14 +1,11 @@
 import { Component, OnInit, OnDestroy, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, FormControl, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormControl } from '@angular/forms';
 import { Subject, takeUntil, debounceTime, distinctUntilChanged } from 'rxjs';
 
 import { NzTableModule } from 'ng-zorro-antd/table';
 import { NzButtonModule } from 'ng-zorro-antd/button';
-import { NzModalModule } from 'ng-zorro-antd/modal';
-import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
-import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzIconModule } from 'ng-zorro-antd/icon';
 import { NzMessageService } from 'ng-zorro-antd/message';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
@@ -21,6 +18,7 @@ import { NzAvatarModule } from 'ng-zorro-antd/avatar';
 import { DataService, TableEntry } from '../../services/data.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { Router } from '@angular/router';
+import { EntryModalComponent, EntryFormData } from '../entry-modal/entry-modal.component';
 
 export interface SortConfig {
   field: keyof TableEntry | null;
@@ -36,17 +34,15 @@ export interface SortConfig {
     ReactiveFormsModule,
     NzTableModule,
     NzButtonModule,
-    NzModalModule,
-    NzFormModule,
     NzInputModule,
-    NzDatePickerModule,
     NzIconModule,
     NzPopconfirmModule,
     NzSpinModule,
     NzLayoutModule,
     NzDropDownModule,
     NzMenuModule,
-    NzAvatarModule
+    NzAvatarModule,
+    EntryModalComponent
   ],
   standalone: true
 })
@@ -62,10 +58,8 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   isModalVisible = false;
   isEditMode = false;
-  editingEntryId: string | null = null;
-  modalTitle = 'Add New Entry';
+  editingEntry: TableEntry | null = null;
 
-  entryForm!: FormGroup;
   searchControl = new FormControl('');
 
   filteredEntries = computed(() => {
@@ -102,13 +96,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   constructor(
     private dataService: DataService,
     private authService: AuthService,
-    private fb: FormBuilder,
     private message: NzMessageService,
     private router: Router
   ) {}
 
   ngOnInit(): void {
-    this.initializeForm();
     this.setupSearch();
     this.loadCurrentUser();
     this.subscribeToEntries();
@@ -121,16 +113,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.destroy$.complete();
   }
 
-  private initializeForm(): void {
-    this.entryForm = this.fb.group({
-      name: ['', [Validators.required, Validators.maxLength(255)]],
-      description: ['', [Validators.required, Validators.maxLength(1000)]],
-      date: [new Date(), [Validators.required]],
-      repository_link: ['', [Validators.required, this.urlValidator]],
-      go_to_link: ['', [Validators.required, this.urlValidator]]
-    });
-  }
-
   private setupSearch(): void {
     this.searchControl.valueChanges
       .pipe(
@@ -141,12 +123,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
       .subscribe(value => {
         this.searchTerm.set(value || '');
       });
-  }
-
-  private urlValidator(control: any) {
-    if (!control.value) return null;
-    const urlPattern = /^https?:\/\/.+/;
-    return urlPattern.test(control.value) ? null : { invalidUrl: true };
   }
 
   private loadCurrentUser(): void {
@@ -213,55 +189,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
   openModal(): void {
     this.isEditMode = false;
-    this.editingEntryId = null;
-    this.modalTitle = 'Add New Entry';
-    this.entryForm.reset();
-    this.entryForm.patchValue({ date: new Date() });
+    this.editingEntry = null;
     this.isModalVisible = true;
   }
 
   openEditModal(entry: TableEntry): void {
     this.isEditMode = true;
-    this.editingEntryId = entry.id!;
-    this.modalTitle = 'Edit Entry';
-    this.entryForm.patchValue({
-      name: entry.name,
-      description: entry.description,
-      date: entry.date,
-      repository_link: entry.repository_link,
-      go_to_link: entry.go_to_link
-    });
+    this.editingEntry = entry;
     this.isModalVisible = true;
   }
 
-  handleCancel(): void {
+  onModalCancel(): void {
     this.isModalVisible = false;
-    this.entryForm.reset();
+    this.editingEntry = null;
   }
 
-  async handleOk(): Promise<void> {
-    if (this.entryForm.valid) {
-      this.isLoading.set(true);
-      try {
-        const formValue = this.entryForm.value;
-
-        if (this.isEditMode && this.editingEntryId) {
-          await this.dataService.updateEntry(this.editingEntryId, formValue);
-          this.message.success('Entry updated successfully!');
-        } else {
-          await this.dataService.createEntry(formValue);
-          this.message.success('Entry created successfully!');
-        }
-
-        this.isModalVisible = false;
-        this.entryForm.reset();
-      } catch (error: any) {
-        this.message.error(error.message || 'Operation failed');
-      } finally {
-        this.isLoading.set(false);
+  async onModalSave(formData: EntryFormData): Promise<void> {
+    this.isLoading.set(true);
+    try {
+      if (this.isEditMode && this.editingEntry?.id) {
+        await this.dataService.updateEntry(this.editingEntry.id, formData);
+        this.message.success('Entry updated successfully!');
+      } else {
+        await this.dataService.createEntry(formData);
+        this.message.success('Entry created successfully!');
       }
-    } else {
-      this.markFormGroupTouched();
+
+      this.isModalVisible = false;
+      this.editingEntry = null;
+    } catch (error: any) {
+      this.message.error(error.message || 'Operation failed');
+    } finally {
+      this.isLoading.set(false);
     }
   }
 
@@ -285,43 +244,5 @@ export class DashboardComponent implements OnInit, OnDestroy {
     } catch (error: any) {
       this.message.error(error.message || 'Failed to sign out');
     }
-  }
-
-  private markFormGroupTouched(): void {
-    Object.keys(this.entryForm.controls).forEach(key => {
-      const control = this.entryForm.get(key);
-      control?.markAsTouched();
-    });
-  }
-
-  getErrorMessage(field: string): string {
-    const control = this.entryForm.get(field);
-    if (control?.hasError('required')) {
-      return `${this.getFieldDisplayName(field)} is required`;
-    }
-    if (control?.hasError('maxlength')) {
-      const maxLength = control.errors!['maxlength'].requiredLength;
-      return `Maximum ${maxLength} characters allowed`;
-    }
-    if (control?.hasError('invalidUrl')) {
-      return 'Please enter a valid URL (starting with http:// or https://)';
-    }
-    return '';
-  }
-
-  private getFieldDisplayName(field: string): string {
-    const displayNames: { [key: string]: string } = {
-      name: 'Name',
-      description: 'Description',
-      date: 'Date',
-      repository_link: 'Repository link',
-      go_to_link: 'Go to link'
-    };
-    return displayNames[field] || field;
-  }
-
-  isFieldInvalid(field: string): boolean {
-    const control = this.entryForm.get(field);
-    return !!(control?.invalid && (control?.dirty || control?.touched));
   }
 }

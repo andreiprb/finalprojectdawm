@@ -1,0 +1,74 @@
+<nz-modal
+  [nzVisible]="visible"
+  [nzTitle]="modalTitle"
+  [nzOkText]="okText"
+  [nzCancelText]="'Cancel'"
+  [nzOkLoading]="loading"
+  [nzOkDisabled]="entryForm.invalid"
+  (nzOnCancel)="handleCancel()"
+  (nzOnOk)="handleOk()"
+  (nzVisibleChange)="visibleChange.emit($event)"
+  nzWidth="600px">
+
+  <ng-container *nzModalContent>
+    <form nz-form [formGroup]="entryForm" nzLayout="vertical">
+      <nz-form-item>
+        <nz-form-label nzRequired>Name</nz-form-label>
+        <nz-form-control [nzErrorTip]="getErrorMessage('name')">
+          <input
+            nz-input
+            formControlName="name"
+            placeholder="Enter entry name"
+            [nzStatus]="isFieldInvalid('name') ? 'error' : ''" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Description</nz-form-label>
+        <nz-form-control [nzErrorTip]="getErrorMessage('description')">
+          <textarea
+            nz-input
+            formControlName="description"
+            placeholder="Enter description"
+            [nzStatus]="isFieldInvalid('description') ? 'error' : ''"
+            rows="4">
+          </textarea>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Date</nz-form-label>
+        <nz-form-control [nzErrorTip]="getErrorMessage('date')">
+          <nz-date-picker
+            formControlName="date"
+            [nzStatus]="isFieldInvalid('date') ? 'error' : ''"
+            nzFormat="yyyy-MM-dd"
+            style="width: 100%">
+          </nz-date-picker>
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Repository Link</nz-form-label>
+        <nz-form-control [nzErrorTip]="getErrorMessage('repository_link')">
+          <input
+            nz-input
+            formControlName="repository_link"
+            placeholder="https://github.com/username/repository"
+            [nzStatus]="isFieldInvalid('repository_link') ? 'error' : ''" />
+        </nz-form-control>
+      </nz-form-item>
+
+      <nz-form-item>
+        <nz-form-label nzRequired>Go To Link</nz-form-label>
+        <nz-form-control [nzErrorTip]="getErrorMessage('go_to_link')">
+          <input
+            nz-input
+            formControlName="go_to_link"
+            placeholder="https://example.com"
+            [nzStatus]="isFieldInvalid('go_to_link') ? 'error' : ''" />
+        </nz-form-control>
+      </nz-form-item>
+    </form>
+  </ng-container>
+</nz-modal>
