@@ -12,13 +12,7 @@ export class DatabaseService {
     if (!DatabaseService.supabaseClient) {
       DatabaseService.supabaseClient = createClient(
         environment.supabaseUrl,
-        environment.supabaseAnonKey,
-        {
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false
-          }
-        }
+        environment.supabaseAnonKey
       );
     }
   }
