@@ -69,7 +69,7 @@
       nzSize="middle"
       [nzScroll]="{ x: '800px' }"
       [nzShowPagination]="false"
-      [nzNoResult]="customNoResult">
+      [nzNoResult]="''">
       <thead>
       <tr>
         <th
@@ -172,33 +172,31 @@
         } @empty {
           <tr>
             <td colspan="6" class="empty-row">
-              @if (searchTerm()) {
-                <div class="custom-empty-state">
+              <div class="custom-empty-state">
+                @if (searchTerm()) {
+                  <!-- No search results state -->
                   <span nz-icon nzType="search" class="empty-icon"></span>
                   <h3>No results found</h3>
                   <p>Try adjusting your search terms</p>
                   <button nz-button nzType="default" (click)="searchControl.setValue('')">
                     Clear Search
                   </button>
-                </div>
-              }
+                } @else {
+                  <!-- No entries at all state -->
+                  <span nz-icon nzType="inbox" class="empty-icon"></span>
+                  <h3>No entries yet</h3>
+                  <p>Create your first entry to get started!</p>
+                  <button nz-button nzType="primary" (click)="openModal()">
+                    <span nz-icon nzType="plus"></span>
+                    Add New Entry
+                  </button>
+                }
+              </div>
             </td>
           </tr>
         }
       </tbody>
     </nz-table>
-
-    <ng-template #customNoResult>
-      <div class="custom-empty-state">
-        <span nz-icon nzType="inbox" class="empty-icon"></span>
-        <h3>No entries yet</h3>
-        <p>Create your first entry to get started!</p>
-        <button nz-button nzType="primary" (click)="openModal()">
-          <span nz-icon nzType="plus"></span>
-          Add New Entry
-        </button>
-      </div>
-    </ng-template>
   </nz-content>
 </nz-layout>
 
