@@ -35,7 +35,6 @@
       </button>
     </div>
 
-    <!-- Table -->
     <nz-table
       #basicTable
       [nzData]="entries"
@@ -105,7 +104,6 @@
       </tbody>
     </nz-table>
 
-    <!-- Custom No Result Template -->
     <ng-template #customNoResult>
       <div class="custom-empty-state">
         <span nz-icon nzType="inbox" class="empty-icon"></span>
@@ -120,7 +118,6 @@
   </nz-content>
 </nz-layout>
 
-<!-- Modal for Add/Edit Entry -->
 <nz-modal
   [(nzVisible)]="isModalVisible"
   [nzTitle]="modalTitle"

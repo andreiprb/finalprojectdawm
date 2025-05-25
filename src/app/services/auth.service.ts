@@ -36,7 +36,6 @@ export class AuthService {
   }
 
   private async setCurrentUser(user: User): Promise<void> {
-    // Use getUser() to get the most up-to-date user data including metadata
     const { data: { user: currentUser }, error } = await this.dbService.auth.getUser();
 
     if (error || !currentUser) {
@@ -44,7 +43,6 @@ export class AuthService {
       return;
     }
 
-    // Construct display name from first_name and last_name
     const firstName = currentUser.user_metadata?.['first_name'] || '';
     const lastName = currentUser.user_metadata?.['last_name'] || '';
     const displayName = `${firstName} ${lastName}`.trim() || 'User';
@@ -101,7 +99,6 @@ export class AuthService {
     return this.currentUserSubject.value !== null;
   }
 
-  // Debug method to check what's actually in the user metadata
   async debugUserMetadata(): Promise<void> {
     const { data: { user }, error } = await this.dbService.auth.getUser();
     if (error) {

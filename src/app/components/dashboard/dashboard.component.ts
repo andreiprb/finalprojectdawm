@@ -52,13 +52,11 @@ export class DashboardComponent implements OnInit, OnDestroy {
   isLoading = false;
   currentUser: UserProfile | null = null;
 
-  // Modal state
   isModalVisible = false;
   isEditMode = false;
   editingEntryId: string | null = null;
   modalTitle = 'Add New Entry';
 
-  // Form
   entryForm!: FormGroup;
 
   constructor(
@@ -74,7 +72,6 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadCurrentUser();
     this.subscribeToEntries();
     this.loadEntries();
-    // Debug: Check what's in user metadata
     this.authService.debugUserMetadata();
   }
 

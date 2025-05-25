@@ -9,14 +9,13 @@ export class DatabaseService {
   private static supabaseClient: SupabaseClient | null = null;
 
   constructor() {
-    // Initialize the client if it doesn't exist
     if (!DatabaseService.supabaseClient) {
       DatabaseService.supabaseClient = createClient(
         environment.supabaseUrl,
         environment.supabaseAnonKey,
         {
           auth: {
-            persistSession: false, // <--- dezactivează mecanismul cu lock
+            persistSession: false,
             autoRefreshToken: false
           }
         }

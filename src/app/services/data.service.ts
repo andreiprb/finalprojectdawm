@@ -82,7 +82,6 @@ export class DataService {
         throw error;
       }
 
-      // Reload entries to get the updated list
       await this.loadEntries();
     } catch (error: any) {
       console.error('Error creating entry:', error);
@@ -110,7 +109,6 @@ export class DataService {
         throw error;
       }
 
-      // Reload entries to get the updated list
       await this.loadEntries();
     } catch (error: any) {
       console.error('Error updating entry:', error);
@@ -129,7 +127,6 @@ export class DataService {
         throw error;
       }
 
-      // Reload entries to get the updated list
       await this.loadEntries();
     } catch (error: any) {
       console.error('Error deleting entry:', error);

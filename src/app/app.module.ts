@@ -27,7 +27,6 @@ import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
 import { NzPopconfirmModule } from 'ng-zorro-antd/popconfirm';
 import { NzToolTipModule } from 'ng-zorro-antd/tooltip';
 
-// ng-zorro locale
 import { NZ_I18N, en_US } from 'ng-zorro-antd/i18n';
 
 import { AppRoutingModule } from './app-routing.module';
@@ -50,9 +49,6 @@ import {
   GlobalOutline
 } from '@ant-design/icons-angular/icons';
 
-import { DashboardComponent } from './components/dashboard/dashboard.component';
-
-// Register locale data
 registerLocaleData(en);
 
 const icons: IconDefinition[] = [
