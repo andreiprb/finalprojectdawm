@@ -1,5 +1,5 @@
 import { AbstractControl, ValidationErrors, ValidatorFn, AsyncValidatorFn } from '@angular/forms';
-import { Observable, of } from 'rxjs';
+import {from, Observable, of} from 'rxjs';
 import { map, catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { DatabaseService } from '../services/db.service';
 
@@ -71,37 +71,16 @@ export class CustomValidators {
         debounceTime(500),
         distinctUntilChanged(),
         switchMap(email => {
-          return dbService.auth.signInWithPassword({
-            email: email,
-            password: 'dummy-password-that-will-never-work-12345!@#'
-          });
-        }),
-        map((signInResult: any) => {
-          if (signInResult.error) {
-            const errorMessage = signInResult.error.message.toLowerCase();
-
-            if (errorMessage.includes('invalid') &&
-              (errorMessage.includes('credentials') || errorMessage.includes('password'))) {
-              return { emailExists: true };
-            } else if (errorMessage.includes('not found') ||
-              errorMessage.includes('user not found') ||
-              errorMessage.includes('email not confirmed')) {
-              return null;
-            } else {
-              return { emailExists: true };
-            }
-          } else {
-            return { emailExists: true };
-          }
-        }),
-        catchError(() => {
-          console.warn('Error checking email availability');
-          return of(null);
+          return from(dbService.getClient().rpc('check_email_exists', { email_input: email })).pipe(
+            map((result: any) => {
+              return result.data ? { emailExists: true } : null;
+            }),
+            catchError(() => of(null))
+          );
         })
       );
     };
   }
-
   static passwordMatch(passwordField: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const password = control.parent?.get(passwordField);
