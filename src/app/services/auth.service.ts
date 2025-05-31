@@ -24,11 +24,9 @@ export class AuthService {
 
   private async initializeAuth(): Promise<void> {
     try {
-      // Check if user wants to be remembered
       const shouldRemember = this.getRememberMePreference();
 
       if (!shouldRemember) {
-        // If user doesn't want to be remembered, clear any existing session
         await this.clearSessionIfNotRemembered();
       }
 
@@ -70,7 +68,6 @@ export class AuthService {
   private async clearSessionIfNotRemembered(): Promise<void> {
     const shouldRemember = this.getRememberMePreference();
     if (!shouldRemember) {
-      // Clear the session but don't call signOut to avoid triggering auth state change
       localStorage.removeItem('supabase.auth.token');
       sessionStorage.removeItem('supabase.auth.token');
     }
@@ -126,7 +123,6 @@ export class AuthService {
   }
 
   async signIn(email: string, password: string, rememberMe: boolean = false): Promise<void> {
-    // Store the remember me preference before signing in
     this.setRememberMePreference(rememberMe);
 
     const { error } = await this.dbService.auth.signInWithPassword({
@@ -139,21 +135,16 @@ export class AuthService {
       throw new Error(error.message);
     }
 
-    // If user doesn't want to be remembered, we'll handle session persistence differently
     if (!rememberMe) {
-      // Move the session from localStorage to sessionStorage for this session only
       await this.moveSessionToSessionStorage();
     }
   }
 
   private async moveSessionToSessionStorage(): Promise<void> {
     try {
-      // Get current session data from localStorage
       const sessionData = localStorage.getItem('supabase.auth.token');
       if (sessionData) {
-        // Move to sessionStorage (expires when browser closes)
         sessionStorage.setItem('supabase.auth.token', sessionData);
-        // Remove from localStorage
         localStorage.removeItem('supabase.auth.token');
       }
     } catch (error) {
