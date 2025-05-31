@@ -16,6 +16,7 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   private initialized = false;
+  private rememberMeKey = 'app-remember-me';
 
   constructor(private dbService: DatabaseService) {
     this.initializeAuth();
@@ -23,6 +24,14 @@ export class AuthService {
 
   private async initializeAuth(): Promise<void> {
     try {
+      // Check if user wants to be remembered
+      const shouldRemember = this.getRememberMePreference();
+
+      if (!shouldRemember) {
+        // If user doesn't want to be remembered, clear any existing session
+        await this.clearSessionIfNotRemembered();
+      }
+
       const { data: { session }, error: sessionError } = await this.dbService.auth.getSession();
 
       if (sessionError) {
@@ -31,7 +40,7 @@ export class AuthService {
         return;
       }
 
-      if (session?.user) {
+      if (session?.user && shouldRemember) {
         await this.setCurrentUser(session.user);
       }
 
@@ -40,10 +49,12 @@ export class AuthService {
 
         if (event === 'SIGNED_IN' && session?.user) {
           await this.setCurrentUser(session.user);
-        } else if (event === 'SIGNED_OUT' || event === 'TOKEN_REFRESHED') {
-          if (event === 'SIGNED_OUT') {
-            this.currentUserSubject.next(null);
-          } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+        } else if (event === 'SIGNED_OUT') {
+          this.currentUserSubject.next(null);
+          this.clearRememberMePreference();
+        } else if (event === 'TOKEN_REFRESHED' && session?.user) {
+          const shouldRemember = this.getRememberMePreference();
+          if (shouldRemember) {
             await this.setCurrentUser(session.user);
           }
         }
@@ -54,6 +65,31 @@ export class AuthService {
       console.error('Auth initialization error:', error);
       this.initialized = true;
     }
+  }
+
+  private async clearSessionIfNotRemembered(): Promise<void> {
+    const shouldRemember = this.getRememberMePreference();
+    if (!shouldRemember) {
+      // Clear the session but don't call signOut to avoid triggering auth state change
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
+    }
+  }
+
+  private getRememberMePreference(): boolean {
+    return localStorage.getItem(this.rememberMeKey) === 'true';
+  }
+
+  private setRememberMePreference(remember: boolean): void {
+    if (remember) {
+      localStorage.setItem(this.rememberMeKey, 'true');
+    } else {
+      localStorage.removeItem(this.rememberMeKey);
+    }
+  }
+
+  private clearRememberMePreference(): void {
+    localStorage.removeItem(this.rememberMeKey);
   }
 
   private async setCurrentUser(user: User): Promise<void> {
@@ -90,15 +126,43 @@ export class AuthService {
   }
 
   async signIn(email: string, password: string, rememberMe: boolean = false): Promise<void> {
+    // Store the remember me preference before signing in
+    this.setRememberMePreference(rememberMe);
+
     const { error } = await this.dbService.auth.signInWithPassword({
       email,
       password
     });
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      this.clearRememberMePreference();
+      throw new Error(error.message);
+    }
+
+    // If user doesn't want to be remembered, we'll handle session persistence differently
+    if (!rememberMe) {
+      // Move the session from localStorage to sessionStorage for this session only
+      await this.moveSessionToSessionStorage();
+    }
+  }
+
+  private async moveSessionToSessionStorage(): Promise<void> {
+    try {
+      // Get current session data from localStorage
+      const sessionData = localStorage.getItem('supabase.auth.token');
+      if (sessionData) {
+        // Move to sessionStorage (expires when browser closes)
+        sessionStorage.setItem('supabase.auth.token', sessionData);
+        // Remove from localStorage
+        localStorage.removeItem('supabase.auth.token');
+      }
+    } catch (error) {
+      console.error('Error moving session to sessionStorage:', error);
+    }
   }
 
   async signOut(): Promise<void> {
+    this.clearRememberMePreference();
     const { error } = await this.dbService.auth.signOut();
     if (error) throw new Error(error.message);
   }
@@ -134,6 +198,7 @@ export class AuthService {
         return;
       }
       console.log('Current user metadata:', user?.user_metadata);
+      console.log('Remember me preference:', this.getRememberMePreference());
     } catch (error) {
       console.error('Debug error:', error);
     }
