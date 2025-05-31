@@ -12,6 +12,7 @@ import { NzDividerModule } from 'ng-zorro-antd/divider';
 import { NzMessageService } from 'ng-zorro-antd/message';
 
 import { AuthService, UserProfile } from '../../services/auth.service';
+import { DatabaseService } from '../../services/db.service';
 import { CustomValidators } from '../../validators/custom-validators';
 
 @Component({
@@ -46,6 +47,7 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
+    private dbService: DatabaseService,
     private router: Router,
     private message: NzMessageService
   ) {}
@@ -65,7 +67,10 @@ export class LoginComponent implements OnInit {
     this.registerForm = this.fb.group({
       firstName: ['', [Validators.required, CustomValidators.validName()]],
       lastName: ['', [Validators.required, CustomValidators.validName()]],
-      email: ['', [Validators.required, CustomValidators.validEmail()]],
+      email: ['',
+        [Validators.required, CustomValidators.validEmail()],
+        [CustomValidators.goodEmail(this.dbService)]
+      ],
       password: ['', [Validators.required, CustomValidators.strongPassword()]],
       confirmPassword: ['', [Validators.required]]
     });
@@ -148,6 +153,9 @@ export class LoginComponent implements OnInit {
     }
     if (control?.hasError('invalidEmail')) {
       return 'Please enter a valid email address';
+    }
+    if (control?.hasError('emailExists')) {
+      return 'This email address is already registered. Please use a different email or try logging in.';
     }
     if (control?.hasError('invalidName')) {
       return 'Name can only contain letters and spaces';
