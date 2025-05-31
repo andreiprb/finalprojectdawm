@@ -43,8 +43,6 @@ export class AuthService {
       }
 
       this.dbService.auth.onAuthStateChange(async (event, session) => {
-        console.log('Auth state change:', event, session?.user?.email);
-
         if (event === 'SIGNED_IN' && session?.user) {
           await this.setCurrentUser(session.user);
         } else if (event === 'SIGNED_OUT') {
@@ -188,8 +186,6 @@ export class AuthService {
         console.error('Error fetching user for debug:', error);
         return;
       }
-      console.log('Current user metadata:', user?.user_metadata);
-      console.log('Remember me preference:', this.getRememberMePreference());
     } catch (error) {
       console.error('Debug error:', error);
     }
