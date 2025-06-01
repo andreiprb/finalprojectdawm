@@ -171,7 +171,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private getSortValue(entry: TableEntry, field: keyof TableEntry): any {
     switch (field) {
       case 'date':
-        return new Date(entry.date).getTime();
+        return entry.date.getTime();
       case 'name':
       case 'description':
         return entry[field].toLowerCase();
