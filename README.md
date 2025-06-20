@@ -47,19 +47,6 @@ The application follows Angular best practices with standalone components, lazy 
 - **Visual Feedback**: Loading states, success/error messages, and intuitive user interactions
 - **Professional Appearance**: Clean, modern design without bugs or visual inconsistencies
 
-## 🎁 Bonus Features
-
-### Real Backend Integration (0.5 points)
-- **Supabase Integration**: Connected to Supabase backend providing real authentication, user management, and data persistence instead of using fake APIs
-
-### Advanced Functionality (0.5 points)
-- **Session Management**: Sophisticated session handling with localStorage/sessionStorage strategy based on "Remember Me" preference
-- **Real-time Updates**: Immediate UI updates after CRUD operations without page refreshes
-
-### Additional Libraries (0.5 points)
-- **RxJS**: Advanced reactive programming with observables for authentication state, data streaming, and form interactions
-- **Custom Storage Adapter**: Custom implementation for flexible session storage management
-
 ## 🚀 Technical Highlights
 
 - **Standalone Components**: Modern Angular architecture with standalone components
