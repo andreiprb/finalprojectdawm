@@ -10,7 +10,7 @@ The application follows Angular best practices with standalone components, lazy 
 
 ### Authentication System
 - **Login Form**: Email and password authentication with "Remember Me" checkbox functionality that persists user sessions across browser restarts
-- **Registration Form**: Complete user registration with email, password, confirm password, first name, and last name fields
+- **Registration Form**: Complete user registration with email, password, confirm password, first name, and last name fields, and email confirmation
 - **Custom Validators**: Implemented strong password validation requiring minimum 6 characters with uppercase, lowercase, numeric, and special characters. Additional validators for email format, email uniqueness checking, password confirmation matching, and name validation
 - **Route Protection**: Unauthenticated users can only access the login page, which becomes hidden after successful authentication
 
