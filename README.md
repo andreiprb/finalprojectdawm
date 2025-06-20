@@ -1,12 +1,10 @@
 # DAWM Final Project - Projects Dashboard
 
-A modern Angular application featuring user authentication and project management capabilities, built with Angular standalone components and NgZorro UI library.
-
-## 🎯 Project Overview
+## Project Overview
 
 This is a full-stack Angular application that allows users to register, login, and manage their project entries in a comprehensive dashboard. The application features secure authentication with "Remember Me" functionality, real-time data management with Supabase backend, and a rich user interface built with NgZorro components.
 
-## 🏗️ Architecture
+## Architecture
 
 The application follows Angular best practices with standalone components, lazy loading, and service-based architecture. It uses Supabase as the backend for authentication and data persistence, providing a real-world database experience rather than a mock API.
 
@@ -46,16 +44,3 @@ The application follows Angular best practices with standalone components, lazy 
 - **Responsive Design**: Mobile-friendly interface with proper spacing and layout
 - **Visual Feedback**: Loading states, success/error messages, and intuitive user interactions
 - **Professional Appearance**: Clean, modern design without bugs or visual inconsistencies
-
-## 🚀 Technical Highlights
-
-- **Standalone Components**: Modern Angular architecture with standalone components
-- **Reactive Forms**: Comprehensive form validation with custom validators
-- **Route Guards**: Secure navigation with authentication and login guards
-- **State Management**: Signal-based reactive state management
-- **Error Handling**: Robust error handling throughout the application
-- **TypeScript**: Full TypeScript implementation with proper interfaces and typing
-
-## 📋 Features Summary
-
-The application successfully demonstrates modern Angular development practices while meeting all course requirements. Users can register and authenticate, manage their project entries through a sophisticated dashboard, and enjoy a professional user experience with real-time data updates and comprehensive CRUD operations.
