@@ -66,8 +66,8 @@ export class AuthService {
   private async clearSessionIfNotRemembered(): Promise<void> {
     const shouldRemember = this.getRememberMePreference();
     if (!shouldRemember) {
-      localStorage.removeItem('supabase.auth.token');
-      sessionStorage.removeItem('supabase.auth.token');
+      localStorage.removeItem('finalprojectdawm.supabase.auth.token');
+      sessionStorage.removeItem('finalprojectdawm.supabase.auth.token');
     }
   }
 
@@ -140,10 +140,10 @@ export class AuthService {
 
   private async moveSessionToSessionStorage(): Promise<void> {
     try {
-      const sessionData = localStorage.getItem('supabase.auth.token');
+      const sessionData = localStorage.getItem('finaprojectdawm.supabase.auth.token');
       if (sessionData) {
-        sessionStorage.setItem('supabase.auth.token', sessionData);
-        localStorage.removeItem('supabase.auth.token');
+        sessionStorage.setItem('finalprojectdawm.supabase.auth.token', sessionData);
+        localStorage.removeItem('finalprojectdawm.supabase.auth.token');
       }
     } catch (error) {
       console.error('Error moving session to sessionStorage:', error);

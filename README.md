@@ -35,12 +35,3 @@ The application follows Angular best practices with standalone components, lazy 
 
 ### UI Library Integration (1 point)
 - **NgZorro**: Complete integration of NgZorro UI components including forms, tables, modals, buttons, layouts, and navigation elements providing a professional, consistent design
-
-### Code Quality (0.5 points)
-- **Clean Architecture**: Proper separation of concerns with dedicated components, services, and guards
-- **TypeScript**: Strong typing throughout the application with interfaces and proper error handling
-
-### User Experience (0.5 points)
-- **Responsive Design**: Mobile-friendly interface with proper spacing and layout
-- **Visual Feedback**: Loading states, success/error messages, and intuitive user interactions
-- **Professional Appearance**: Clean, modern design without bugs or visual inconsistencies
