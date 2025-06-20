@@ -8,7 +8,7 @@ This is a full-stack Angular application that allows users to register, login, a
 
 The application follows Angular best practices with standalone components, lazy loading, and service-based architecture. It uses Supabase as the backend for authentication and data persistence, providing a real-world database experience rather than a mock API.
 
-## ✅ Requirements Implementation
+## Requirements Implementation
 
 ### Authentication System (2.5 points)
 - **Login Form**: Email and password authentication with "Remember Me" checkbox functionality that persists user sessions across browser restarts
