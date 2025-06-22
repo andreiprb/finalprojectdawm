@@ -133,8 +133,4 @@ export class DataService {
       throw new Error(error.message || 'Failed to delete entry');
     }
   }
-
-  getEntries(): TableEntry[] {
-    return this.entriesSubject.value;
-  }
 }
