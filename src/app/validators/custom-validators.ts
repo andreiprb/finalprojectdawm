@@ -2,6 +2,7 @@ import { AbstractControl, ValidationErrors, ValidatorFn, AsyncValidatorFn } from
 import {from, Observable, of} from 'rxjs';
 import { map, catchError, debounceTime, distinctUntilChanged, switchMap } from 'rxjs/operators';
 import { DatabaseService } from '../services/db.service';
+import { AUTH_CONFIG } from '../constants/app.constants';
 
 export class CustomValidators {
 
@@ -17,7 +18,7 @@ export class CustomValidators {
       const hasLowerCase = /[a-z]/.test(value);
       const hasNumeric = /[0-9]/.test(value);
       const hasSpecialChar = /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(value);
-      const isLengthValid = value.length >= 6;
+      const isLengthValid = value.length >= AUTH_CONFIG.PASSWORD_MIN_LENGTH;
 
       const errors: any = {};
 
@@ -68,7 +69,7 @@ export class CustomValidators {
       }
 
       return of(value).pipe(
-        debounceTime(500),
+        debounceTime(AUTH_CONFIG.DEBOUNCE_TIME),
         distinctUntilChanged(),
         switchMap(email => {
           return from(dbService.getClient().rpc('check_email_exists', { email_input: email })).pipe(
@@ -81,6 +82,7 @@ export class CustomValidators {
       );
     };
   }
+
   static passwordMatch(passwordField: string): ValidatorFn {
     return (control: AbstractControl): ValidationErrors | null => {
       const password = control.parent?.get(passwordField);

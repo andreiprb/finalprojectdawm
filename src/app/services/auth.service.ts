@@ -2,14 +2,13 @@ import { Injectable } from '@angular/core';
 import { User } from '@supabase/supabase-js';
 import { BehaviorSubject } from 'rxjs';
 import { DatabaseService } from './db.service';
+import { STORAGE_KEYS } from '../constants/app.constants';
 
 export interface UserProfile {
   id: string;
   email: string;
   displayName: string;
 }
-
-const STORAGE_KEY = 'finalprojectdawm.supabase.auth.token';
 
 @Injectable({
   providedIn: 'root'
@@ -18,7 +17,6 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   private initialized = false;
-  private rememberMeKey = 'finalprojectdawm-remember-me';
 
   constructor(private dbService: DatabaseService) {
     this.initializeAuth();
@@ -65,25 +63,25 @@ export class AuthService {
   private async clearSessionIfNotRemembered(): Promise<void> {
     const shouldRemember = this.getRememberMePreference();
     if (!shouldRemember) {
-      localStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN_KEY);
+      sessionStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN_KEY);
     }
   }
 
   private getRememberMePreference(): boolean {
-    return localStorage.getItem(this.rememberMeKey) === 'true';
+    return localStorage.getItem(STORAGE_KEYS.REMEMBER_ME_KEY) === 'true';
   }
 
   private setRememberMePreference(remember: boolean): void {
     if (remember) {
-      localStorage.setItem(this.rememberMeKey, 'true');
+      localStorage.setItem(STORAGE_KEYS.REMEMBER_ME_KEY, 'true');
     } else {
-      localStorage.removeItem(this.rememberMeKey);
+      localStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_KEY);
     }
   }
 
   private clearRememberMePreference(): void {
-    localStorage.removeItem(this.rememberMeKey);
+    localStorage.removeItem(STORAGE_KEYS.REMEMBER_ME_KEY);
   }
 
   private async setCurrentUser(user: User): Promise<void> {
@@ -139,10 +137,10 @@ export class AuthService {
 
   private async moveSessionToSessionStorage(): Promise<void> {
     try {
-      const sessionData = localStorage.getItem(STORAGE_KEY);
+      const sessionData = localStorage.getItem(STORAGE_KEYS.AUTH_TOKEN_KEY);
       if (sessionData) {
-        sessionStorage.setItem(STORAGE_KEY, sessionData);
-        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.setItem(STORAGE_KEYS.AUTH_TOKEN_KEY, sessionData);
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN_KEY);
       }
     } catch (error) {
       console.error('Error moving session to sessionStorage:', error);

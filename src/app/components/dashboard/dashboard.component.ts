@@ -19,6 +19,7 @@ import { DataService, TableEntry } from '../../services/data.service';
 import { AuthService, UserProfile } from '../../services/auth.service';
 import { Router } from '@angular/router';
 import { EntryModalComponent, EntryFormData } from '../entry-modal/entry-modal.component';
+import { UI_CONFIG } from '../../constants/app.constants';
 
 export interface SortConfig {
   field: keyof TableEntry | null;
@@ -116,7 +117,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   private setupSearch(): void {
     this.searchControl.valueChanges
       .pipe(
-        debounceTime(300),
+        debounceTime(UI_CONFIG.SEARCH_DEBOUNCE),
         distinctUntilChanged(),
         takeUntil(this.destroy$)
       )

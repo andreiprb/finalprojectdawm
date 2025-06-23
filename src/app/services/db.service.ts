@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../environments/environment';
-
-const STORAGE_KEY = 'finalprojectdawm.supabase.auth.token';
+import { STORAGE_KEYS } from '../constants/app.constants';
 
 class CustomStorageAdapter {
   getItem(key: string): string | null {
@@ -10,7 +9,7 @@ class CustomStorageAdapter {
   }
 
   setItem(key: string, value: string): void {
-    const rememberMe = localStorage.getItem('finalprojectdawm-remember-me') === 'true';
+    const rememberMe = localStorage.getItem(STORAGE_KEYS.REMEMBER_ME_KEY) === 'true';
 
     if (rememberMe) {
       localStorage.setItem(key, value);
@@ -35,15 +34,13 @@ export class DatabaseService {
     {
       auth: {
         persistSession: true,
-        storageKey: STORAGE_KEY,
+        storageKey: STORAGE_KEYS.AUTH_TOKEN_KEY,
         storage: new CustomStorageAdapter(),
         autoRefreshToken: true,
         detectSessionInUrl: true
       }
     }
   );
-
-  constructor() {}
 
   getClient(): SupabaseClient {
     return DatabaseService.supabaseClient;
