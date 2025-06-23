@@ -6,6 +6,7 @@ import { NzModalModule } from 'ng-zorro-antd/modal';
 import { NzFormModule } from 'ng-zorro-antd/form';
 import { NzInputModule } from 'ng-zorro-antd/input';
 import { NzDatePickerModule } from 'ng-zorro-antd/date-picker';
+import { NzModalService } from 'ng-zorro-antd/modal';
 
 import { TableEntry } from '../../services/data.service';
 
@@ -42,7 +43,10 @@ export class EntryModalComponent implements OnChanges {
 
   entryForm!: FormGroup;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private modal: NzModalService
+  ) {
     this.initializeForm();
   }
 
@@ -92,6 +96,48 @@ export class EntryModalComponent implements OnChanges {
   }
 
   handleCancel(): void {
+    if (this.hasUnsavedChanges()) {
+      this.modal.confirm({
+        nzTitle: 'Discard changes?',
+        nzContent: 'You have unsaved changes. Are you sure you want to cancel?',
+        nzOkText: 'Discard',
+        nzOkDanger: true,
+        nzCancelText: 'Keep editing',
+        nzOnOk: () => {
+          this.clearFormAndCancel();
+        }
+      });
+    } else {
+      this.clearFormAndCancel();
+    }
+  }
+
+  private hasUnsavedChanges(): boolean {
+    const formValue = this.entryForm.value;
+
+    if (this.editMode && this.entryData) {
+      return (
+        formValue.name !== this.entryData.name ||
+        formValue.description !== this.entryData.description ||
+        formValue.date?.getTime() !== this.entryData.date?.getTime() ||
+        formValue.repository_link !== this.entryData.repository_link ||
+        formValue.go_to_link !== this.entryData.go_to_link
+      );
+    } else {
+      const today = new Date();
+      return (
+        (formValue.name && formValue.name.trim() !== '') ||
+        (formValue.description && formValue.description.trim() !== '') ||
+        (formValue.date && formValue.date.toDateString() !== today.toDateString()) ||
+        (formValue.repository_link && formValue.repository_link.trim() !== '') ||
+        (formValue.go_to_link && formValue.go_to_link.trim() !== '')
+      );
+    }
+  }
+
+  private clearFormAndCancel(): void {
+    this.entryForm.reset();
+    this.entryForm.patchValue({ date: new Date() });
     this.cancel.emit();
   }
 
