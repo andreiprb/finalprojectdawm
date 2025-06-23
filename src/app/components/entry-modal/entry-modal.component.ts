@@ -37,7 +37,6 @@ export class EntryModalComponent implements OnChanges {
   @Input() editMode = false;
   @Input() entryData: TableEntry | null = null;
 
-  @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter<EntryFormData>();
   @Output() cancel = new EventEmitter<void>();
 
@@ -93,7 +92,6 @@ export class EntryModalComponent implements OnChanges {
   }
 
   handleCancel(): void {
-    this.visibleChange.emit(false);
     this.cancel.emit();
   }
 
