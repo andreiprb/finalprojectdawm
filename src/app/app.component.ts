@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 
 @Component({
   selector: 'app-root',
@@ -6,14 +6,4 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./app.component.scss'],
   standalone: false
 })
-export class AppComponent implements OnInit {
-  isLoading = true;
-
-  constructor() {}
-
-  ngOnInit(): void {
-    setTimeout(() => {
-      this.isLoading = false;
-    }, 1000);
-  }
-}
+export class AppComponent {}
