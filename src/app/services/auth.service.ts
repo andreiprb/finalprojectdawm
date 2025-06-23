@@ -171,16 +171,4 @@ export class AuthService {
       checkInitialized();
     });
   }
-
-  // async debugUserMetadata(): Promise<void> {
-  //   try {
-  //     const { data: { user }, error } = await this.dbService.auth.getUser();
-  //     if (error) {
-  //       console.error('Error fetching user for debug:', error);
-  //       return;
-  //     }
-  //   } catch (error) {
-  //     console.error('Debug error:', error);
-  //   }
-  // }
 }
