@@ -9,8 +9,6 @@ export interface UserProfile {
   displayName: string;
 }
 
-const STORAGE_KEY = 'dawm-final-project.auth.token';
-
 @Injectable({
   providedIn: 'root'
 })
@@ -18,7 +16,7 @@ export class AuthService {
   private currentUserSubject = new BehaviorSubject<UserProfile | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
   private initialized = false;
-  private rememberMeKey = 'dawm-final-project-remember-me';
+  private rememberMeKey = 'app-remember-me';
 
   constructor(private dbService: DatabaseService) {
     this.initializeAuth();
@@ -68,8 +66,8 @@ export class AuthService {
   private async clearSessionIfNotRemembered(): Promise<void> {
     const shouldRemember = this.getRememberMePreference();
     if (!shouldRemember) {
-      localStorage.removeItem(STORAGE_KEY);
-      sessionStorage.removeItem(STORAGE_KEY);
+      localStorage.removeItem('supabase.auth.token');
+      sessionStorage.removeItem('supabase.auth.token');
     }
   }
 
@@ -142,10 +140,10 @@ export class AuthService {
 
   private async moveSessionToSessionStorage(): Promise<void> {
     try {
-      const sessionData = localStorage.getItem(STORAGE_KEY);
+      const sessionData = localStorage.getItem('finaprojectdawm.supabase.auth.token');
       if (sessionData) {
-        sessionStorage.setItem(STORAGE_KEY, sessionData);
-        localStorage.removeItem(STORAGE_KEY);
+        sessionStorage.setItem('supabase.auth.token', sessionData);
+        localStorage.removeItem('supabase.auth.token');
       }
     } catch (error) {
       console.error('Error moving session to sessionStorage:', error);
