@@ -63,7 +63,7 @@ export class DataService {
         throw new Error('No authenticated user');
       }
 
-      const { data, error } = await this.dbService
+      const { error } = await this.dbService
         .from('user_entries')
         .insert({
           name: entry.name,
@@ -74,9 +74,7 @@ export class DataService {
           go_to_link: entry.go_to_link,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
-        })
-        .select()
-        .single();
+        });
 
       if (error) {
         throw error;
