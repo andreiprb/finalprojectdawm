@@ -82,7 +82,6 @@ const icons: IconDefinition[] = [
     BrowserAnimationsModule,
     ReactiveFormsModule,
     AppRoutingModule,
-
     NzFormModule,
     NzInputModule,
     NzButtonModule,
