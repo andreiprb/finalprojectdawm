@@ -3,6 +3,7 @@ import { CanActivate, Router } from '@angular/router';
 import { Observable, map, switchMap, timer } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
+@Injectable({ providedIn: 'root' })
 abstract class BaseAuthGuard implements CanActivate {
   constructor(
     protected authService: AuthService,
