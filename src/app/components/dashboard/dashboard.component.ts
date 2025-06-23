@@ -106,7 +106,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.loadCurrentUser();
     this.subscribeToEntries();
     this.loadEntries();
-    this.authService.debugUserMetadata();
+    // this.authService.debugUserMetadata();
   }
 
   ngOnDestroy(): void {

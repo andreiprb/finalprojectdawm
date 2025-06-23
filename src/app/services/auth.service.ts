@@ -157,10 +157,6 @@ export class AuthService {
     return this.currentUserSubject.value;
   }
 
-  isAuthenticated(): boolean {
-    return this.currentUserSubject.value !== null;
-  }
-
   async waitForInitialization(): Promise<void> {
     if (this.initialized) return;
 
@@ -176,15 +172,15 @@ export class AuthService {
     });
   }
 
-  async debugUserMetadata(): Promise<void> {
-    try {
-      const { data: { user }, error } = await this.dbService.auth.getUser();
-      if (error) {
-        console.error('Error fetching user for debug:', error);
-        return;
-      }
-    } catch (error) {
-      console.error('Debug error:', error);
-    }
-  }
+  // async debugUserMetadata(): Promise<void> {
+  //   try {
+  //     const { data: { user }, error } = await this.dbService.auth.getUser();
+  //     if (error) {
+  //       console.error('Error fetching user for debug:', error);
+  //       return;
+  //     }
+  //   } catch (error) {
+  //     console.error('Debug error:', error);
+  //   }
+  // }
 }
